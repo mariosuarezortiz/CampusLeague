@@ -11,8 +11,9 @@ public class Usuario {
         this.id = id;
         this.nombre = nombre;
         this.correo = correo;
-        this.contraseña = contraseña;
         this.rol = rol;
+        this.contraseña = contraseña;
+
     }
 
     public void cambiarRol(String nuevoRol) {
