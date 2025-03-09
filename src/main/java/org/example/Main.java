@@ -27,7 +27,13 @@ public class Main {
                 limpiarConsola();
                 menuInstitucion();
             } else {
-                System.out.println("Acceso concedido, pero sin permisos de institución.");
+                if (tipoUsuario.equals("ESTUDIANTE")) {
+                    institucionActual = correoIngresado;
+                    limpiarConsola();
+                    menuEstudiante();
+                } else {
+                    System.out.println("Acceso concedido, pero sin rol identificado.");
+                }
             }
         } else {
             System.out.println("Error: Correo o contraseña incorrectos.");
@@ -60,8 +66,36 @@ public class Main {
         return null;
     }
 
+    private static void menuEstudiante() {
+        while (true) {
+            limpiarConsola();
+            System.out.println("\n--- MENÚ INSTITUCIONES ---");
+            System.out.println("1. Enlistar Competiciones");
+            System.out.println("2. Salir");
+            System.out.print("Seleccione una opción: ");
+
+            int opcion = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcion) {
+                case 1:
+                    limpiarConsola();
+                    enlistarCompeticionesEstudiante();
+                    break;
+                case 2:
+                    limpiarConsola();
+                    System.out.println("Saliendo del menú...");
+                    return;
+                default:
+                    limpiarConsola();
+                    System.out.println("Opción inválida. Intente nuevamente.");
+            }
+        }
+    }
+
     private static void menuInstitucion() {
         while (true) {
+            limpiarConsola();
             System.out.println("\n--- MENÚ INSTITUCIONES ---");
             System.out.println("1. Enlistar Competiciones");
             System.out.println("2. Agregar Competición");
@@ -74,15 +108,19 @@ public class Main {
 
             switch (opcion) {
                 case 1:
+                    limpiarConsola();
                     enlistarCompeticiones();
                     break;
                 case 2:
+                    limpiarConsola();
                     agregarCompeticion();
                     break;
                 case 3:
+                    limpiarConsola();
                     verMisCompeticiones();
                     break;
                 case 4:
+                    limpiarConsola();
                     System.out.println("Saliendo del menú...");
                     return;
                 default:
@@ -91,15 +129,63 @@ public class Main {
         }
     }
 
+    private static void cargarCompeticionesDesdeArchivo() {
+        competiciones.clear(); // Limpiar la lista antes de cargar nuevas competiciones
+
+        File archivo = new File(ARCHIVO_COMPETENCIAS);
+        if (!archivo.exists()) {
+            return; // Si el archivo no existe, no hay competiciones que cargar
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] datos = linea.split(",");
+                if (datos.length == 7) {
+                    String id = datos[0].trim();
+                    String nombre = datos[1].trim();
+                    String descripcion = datos[2].trim();
+                    Date fechaInicio = formatoFecha.parse(datos[3].trim());
+                    Date fechaFin = formatoFecha.parse(datos[4].trim());
+                    String institucionId = datos[5].trim();
+                    double costoInscripcion = Double.parseDouble(datos[6].trim());
+
+                    competiciones.add(new Competencia(id, nombre, descripcion, fechaInicio, fechaFin, institucionId, costoInscripcion));
+                }
+            }
+        } catch (IOException | java.text.ParseException e) {
+            System.out.println("Error al leer el archivo de competiciones: " + e.getMessage());
+        }
+    }
     private static void enlistarCompeticiones() {
+        cargarCompeticionesDesdeArchivo(); // Primero, cargar las competiciones en la lista
+
+        if (competiciones.isEmpty()) {
+            System.out.println("No hay competiciones disponibles.");
+            return;
+        }
+
+        System.out.println("\n--- Lista de Competiciones ---");
+        int i = 1;
+        for (Competencia c : competiciones) {
+            System.out.println(i + ". Nombre: " + c.getNombre() + " | Estado: " + c.getEstado());
+            i++;
+        }
+    }
+
+    private static void enlistarCompeticionesEstudiante() {
+        cargarCompeticionesDesdeArchivo(); // Primero, cargar las competiciones en la lista
+
         if (competiciones.isEmpty()) {
             System.out.println("No hay competiciones disponibles.");
             return;
         }
         System.out.println("\n--- Lista de Competiciones ---");
+        int i = 0;
         for (Competencia c : competiciones) {
-            System.out.println("Nombre: " + c.getNombre() + " | Estado: " + c.getEstado());
+            System.out.println(i + ". Nombre: " + c.getNombre() + " | Estado: " + c.getEstado());
         }
+        System.out.println("\nIngrese competición a detallar: ");
     }
 
     private static final String ARCHIVO_COMPETENCIAS = "src/main/java/org/example/data/competencias.txt";
@@ -165,15 +251,8 @@ public class Main {
     }
 
     private static void limpiarConsola() {
-        try {
-            if (System.getProperty("os.name").contains("Windows")) {
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                System.out.print("\033[H\033[2J");
-                System.out.flush();
-            }
-        } catch (Exception e) {
-            System.out.println("No se pudo limpiar la consola.");
-        }
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
     }
+
 }
