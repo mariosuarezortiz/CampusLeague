@@ -31,6 +31,34 @@ public class Competencia {
         this.estado = "FINALIZADA";
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public Date getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public Date getFechaFin() {
+        return fechaFin;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public String getInstitucionId() {
+        return institucionId;
+    }
+
     public double getCostoInscripcion() {
         return costoInscripcion;
     }
