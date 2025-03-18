@@ -74,15 +74,14 @@ public class Main {
             System.out.println("2. Salir");
             System.out.print("Seleccione una opción: ");
 
-            int opcion = scanner.nextInt();
-            scanner.nextLine();
+            String opcion = scanner.nextLine();
 
             switch (opcion) {
-                case 1:
+                case "1":
                     limpiarConsola();
                     enlistarCompeticionesEstudiante();
                     break;
-                case 2:
+                case "2":
                     limpiarConsola();
                     System.out.println("Saliendo del menú...");
                     return;
@@ -103,23 +102,22 @@ public class Main {
             System.out.println("4. Salir");
             System.out.print("Seleccione una opción: ");
 
-            int opcion = scanner.nextInt();
-            scanner.nextLine();
+            String opcion = scanner.nextLine();
 
             switch (opcion) {
-                case 1:
+                case "1":
                     limpiarConsola();
                     enlistarCompeticiones();
                     break;
-                case 2:
+                case "2":
                     limpiarConsola();
                     agregarCompeticion();
                     break;
-                case 3:
+                case "3":
                     limpiarConsola();
                     verMisCompeticiones();
                     break;
-                case 4:
+                case "4":
                     limpiarConsola();
                     System.out.println("Saliendo del menú...");
                     return;
@@ -196,13 +194,20 @@ public class Main {
         String nombre = scanner.nextLine();
         System.out.print("Ingrese la descripción: ");
         String descripcion = scanner.nextLine();
-        System.out.print("Ingrese la fecha de inicio (YYYY-MM-DD): ");
-        String fechaInicioStr = scanner.nextLine();
-        System.out.print("Ingrese la fecha de fin (YYYY-MM-DD): ");
-        String fechaFinStr = scanner.nextLine();
         System.out.print("Ingrese el costo de inscripción: ");
         double costoInscripcion = scanner.nextDouble();
         scanner.nextLine();
+        System.out.print("Ingrese la fecha de inicio (YYYY-MM-DD): ");
+        String fechaInicioStr = scanner.nextLine();
+        try {
+            Date fechaInicio = formatoFecha.parse(fechaInicioStr);
+        } catch (Exception e) {
+            System.out.println("El formato de la fecha esta mal puesta porfavor intente denuevo");
+            return;
+        }
+        System.out.print("Ingrese la fecha de fin (YYYY-MM-DD): ");
+        String fechaFinStr = scanner.nextLine();
+
 
         try {
             Date fechaInicio = formatoFecha.parse(fechaInicioStr);
