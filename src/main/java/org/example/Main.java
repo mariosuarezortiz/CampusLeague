@@ -78,9 +78,10 @@ public class Main {
     private static void menuEstudiante() {
         while (true) {
             limpiarConsola();
-            System.out.println("\n--- MENÚ INSTITUCIONES ---");
+            System.out.println("\n--- MENÚ ESTDUIANTES ---");
             System.out.println("1. Enlistar Competiciones");
-            System.out.println("2. Salir");
+            System.out.println("2. Competiciones Inscritas");
+            System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
 
             String opcion = scanner.nextLine();
@@ -91,6 +92,10 @@ public class Main {
                     enlistarCompeticionesEstudiante();
                     break;
                 case "2":
+                    limpiarConsola();
+                    enlistarCompeticionesInscritasEstudiante();
+                    break;
+                case "0":
                     limpiarConsola();
                     System.out.println("Saliendo del menú...");
                     return;
@@ -244,6 +249,39 @@ public class Main {
             }
         }
     }
+
+    private static void enlistarCompeticionesInscritasEstudiante() {
+        cargarCompeticionesDesdeArchivo(); // Primero, cargar las competiciones en la lista
+
+        List<Inscripcion> misInscripciones = new ArrayList<>();
+
+        for(Inscripcion inscripcion: inscripciones) {
+            if(inscripcion.getUsuarioId().equals(idActual))
+                misInscripciones.add(inscripcion);
+        }
+
+        if (misInscripciones.isEmpty()) {
+            System.out.println("No hay competiciones disponibles.");
+            return;
+        }
+        System.out.println("\n--- Lista de Competiciones ---");
+        int i = 1;
+        for (Competencia c : competiciones) {
+            for (Inscripcion inscripcion: misInscripciones){
+                if(String.valueOf(c.getId()).equals(inscripcion.getCompetenciaId()))
+                    System.out.println(i++ + ". Nombre: " + c.getNombre() + " | Estado de Competencia: " + c.getEstado() + " | Fecha Inicio: " +
+                            new SimpleDateFormat("yyyy-MM-dd").format( c.getFechaInicio()) +
+                            " | Mi estado: " + inscripcion.getEstado());
+
+            }
+
+        }
+
+
+        scanner.nextLine();
+    }
+
+
     private static void detallarCompetencia(Integer id) {
         cargarUsuariosDesdeArchivo();
         for (Competencia competencia : competiciones) {
