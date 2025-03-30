@@ -384,6 +384,8 @@ public class Main {
                     inscripcion.getCompetenciaId() + "," + inscripcion.getEstado());
             bw.newLine();
             inscripciones.add(inscripcion);
+            competiciones.get(Integer.parseInt(inscripcion.getCompetenciaId())-1).setParticipantes(competiciones.get(Integer.parseInt(inscripcion.getCompetenciaId())-1).getParticipantes()+1);
+            actualizarArchivoCompetencias(competiciones);
             System.out.println("Inscripcion añadida.");
         } catch (IOException e) {
             System.out.println("Error al escribir en el archivo: " + e.getMessage());
@@ -478,20 +480,50 @@ public class Main {
     }
 
 
+    private static void actualizarArchivoCompetencias(List<Competencia> competencias) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARCHIVO_COMPETENCIAS, false))) {
+            for (Competencia competencia : competencias) {
+                writer.write(String.format("%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s\n",
+                        competencia.getId(),
+                        competencia.getNombre(),
+                        competencia.getDescripcion(),
+                        formatoFecha.format(competencia.getFechaInicio()),
+                        formatoFecha.format(competencia.getFechaFin()),
+                        competencia.getInstitucionId(),
+                        competencia.getCostoInscripcion(),
+                        competencia.getMaxParticipantes(),
+                        competencia.getEstado(),
+                        competencia.getParticipantes()));
+            }
+        } catch (IOException e) {
+            System.out.println("Error al actualizar el archivo de competencias: " + e.getMessage());
+        }
+    }
 
 
     private static void verMisCompeticiones() {
         System.out.println("\n--- Mis Competiciones ---");
         boolean tieneCompeticiones = false;
+
+        ArrayList<Integer> identificadores = new ArrayList<>();
+
+        int i = 0;
         for (Competencia c : competiciones) {
             if (c.getInstitucionId().equals(idActual)) {
-                System.out.println("ID: " + c.getId() + " | Nombre: " + c.getNombre() + " | Estado: " + c.getEstado());
+                identificadores.add(i);
+                System.out.println(++i + " | Nombre: " + c.getNombre() + " | Estado: " + c.getEstado());
                 tieneCompeticiones = true;
             }
         }
         if (!tieneCompeticiones) {
             System.out.println("No tienes competiciones registradas.");
+            return;
         }
+
+        System.out.println("Escriba competencia a gestionar o 0 para salir: ");
+
+
+
     }
 
     private static void limpiarConsola() {
