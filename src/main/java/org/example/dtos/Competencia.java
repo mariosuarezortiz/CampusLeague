@@ -3,7 +3,7 @@ package org.example.dtos;
 import java.util.Date;
 
 public class Competencia {
-    private String id;
+    private Integer id;
     private String nombre;
     private String descripcion;
     private Date fechaInicio;
@@ -11,16 +11,22 @@ public class Competencia {
     private String estado; // ACTIVA, FINALIZADA, CANCELADA
     private String institucionId;
     private double costoInscripcion;
+    private Integer maxParticipantes;
+    private Integer participantes;
 
-    public Competencia(String id, String nombre, String descripcion, Date fechaInicio, Date fechaFin, String institucionId, double costoInscripcion) {
+
+    public Competencia(Integer id, String nombre, String descripcion, Date fechaInicio, Date fechaFin, String institucionId, double costoInscripcion, Integer maxParticipantes,
+                       String estado,Integer participantes) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
-        this.estado = "ACTIVA";
+        this.estado = estado;
         this.institucionId = institucionId;
         this.costoInscripcion = costoInscripcion;
+        this.maxParticipantes = maxParticipantes;
+        this.participantes = participantes;
     }
 
     public void cancelarCompetencia() {
@@ -30,8 +36,11 @@ public class Competencia {
     public void finalizarCompetencia() {
         this.estado = "FINALIZADA";
     }
+    public void empezarCompetencia() {
+        this.estado = "COMENZADO";
+    }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -61,5 +70,18 @@ public class Competencia {
 
     public double getCostoInscripcion() {
         return costoInscripcion;
+    }
+
+    public Integer getMaxParticipantes() {
+        return maxParticipantes;
+    }
+
+
+    public Integer getParticipantes(){
+        return participantes;
+    }
+
+    public void setParticipantes(int participantes){
+        this.participantes = participantes;
     }
 }

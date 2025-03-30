@@ -1,4 +1,6 @@
-7b0fe665-272f-4024-8128-2e0b9e105cc6,Torneo de Clash Royale,COmpetencia para alumnos de 1 y 2 añi,2024-03-25,2024-03-20,uem@gmail.com,12.00
-bc0e24b1-ecbe-4ecd-8a2f-b2e798badf3b,torneo de call of duty,un torneo de cod bo6,2025-03-04,2025-03-06,uem@gmail.com,10.00
-b882bdb2-d8dc-472d-b7c4-67b1e330dfec,torneo de futbol,un torneo de ...',2025-04-04,2025-04-08,uem@gmail.com,10.00
-0ba6fffc-ba1e-4cd9-bbc6-0b1acd76f00f,torneo de basketball,un torneo de basketball para los estudiantes de la facultad,2025-05-07,2025-05-08,uem@gmail.com,3.00
+1,Torneo de Clash Royale,COmpetencia para alumnos de 1 y 2 añi,2024-03-25,2024-03-20,3,12.00,4,DISPONIBLE,2
+2,torneo de call of duty,un torneo de cod bo6,2025-03-04,2025-03-06,3,10.00,8,DISPONIBLE,4
+3,torneo de futbol,un torneo de ...',2025-04-04,2025-04-08,3,10.00,9,DISPONIBLE,9
+4,torneo de basketball,un torneo de basketball para los estudiantes de la facultad,2025-05-07,2025-05-08,3,3.00,10,DISPONIBLE,10
+5,Nueva,ES PRUEBITAAAA,2024-03-12,2024-03-30,3,23.00,5,DISPONIBLE,5
+6,nuevito,asdads,2026-06-12,2025-12-12,3,12.00,5,DISPONIBLE,3
