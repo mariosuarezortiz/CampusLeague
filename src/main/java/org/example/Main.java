@@ -88,7 +88,7 @@ public class Main {
                 default:
                     limpiarConsola();
                     System.out.println("Opción inválida. Intente nuevamente.");
-            }
+            } //test
         }
     }
 
