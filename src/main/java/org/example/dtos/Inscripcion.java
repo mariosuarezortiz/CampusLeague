@@ -24,4 +24,16 @@ public class Inscripcion {
     public void cancelarInscripcion() {
         this.estado = "CANCELADA";
     }
+
+    public String getCompetenciaId() { //metodo para obtener compID
+        return competenciaId;
+    }
+
+    public String getEstado() { //metodo para obtener el estado
+        return estado;
+    }
+
+    public String getUsuarioId() {
+        return usuarioId;
+    }
 }

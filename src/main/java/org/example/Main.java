@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.dtos.Competencia;
+import org.example.dtos.Inscripcion;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -9,6 +10,7 @@ import java.util.*;
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final List<Competencia> competiciones = new ArrayList<>();
+    private static final List<Inscripcion> inscripciones = new ArrayList<>(); // Lista de inscripciones
     private static String institucionActual;
 
     public static void main(String[] args) {
@@ -99,7 +101,8 @@ public class Main {
             System.out.println("1. Enlistar Competiciones");
             System.out.println("2. Agregar Competición");
             System.out.println("3. Mis Competiciones");
-            System.out.println("4. Salir");
+            System.out.println("4. Sortear Participantes");
+            System.out.println("5. Salir");
             System.out.print("Seleccione una opción: ");
 
             String opcion = scanner.nextLine();
@@ -119,11 +122,40 @@ public class Main {
                     break;
                 case "4":
                     limpiarConsola();
+                    System.out.print("Ingrese el ID de la competencia para sortear: ");
+                    String competenciaId = scanner.nextLine();
+                    sortearParticipantes(competenciaId);
+                    break;
+                case "5":
+                    limpiarConsola();
                     System.out.println("Saliendo del menú...");
                     return;
                 default:
                     System.out.println("Opción inválida. Intente nuevamente.");
             }
+        }
+    }
+
+    //nuevo metodo para US05 (el sorteo)
+    public static void sortearParticipantes(String competenciaId) {
+        // Filtramos inscripciones de la competencia
+        List<Inscripcion> participantes = new ArrayList<>();
+        for (Inscripcion inscripcion : inscripciones) {
+            if (inscripcion.getCompetenciaId().equals(competenciaId) && inscripcion.getEstado().equals("CONFIRMADA")) {
+                participantes.add(inscripcion);
+            }
+        }
+
+        if (participantes.isEmpty()) {
+            System.out.println("No hay participantes confirmados para sortear en esta competencia.");
+            return;
+        }
+
+        Collections.shuffle(participantes); // Aleatorizar lista de participantes
+
+        System.out.println("\n=== Resultados del Sorteo para la Competencia ID: " + competenciaId + " ===");
+        for (int i = 0; i < participantes.size(); i++) {
+            System.out.println("Posición " + (i + 1) + ": Usuario ID " + participantes.get(i).getUsuarioId());
         }
     }
 
