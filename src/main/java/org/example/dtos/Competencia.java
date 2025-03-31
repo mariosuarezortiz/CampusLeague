@@ -84,4 +84,8 @@ public class Competencia {
     public void setParticipantes(int participantes){
         this.participantes = participantes;
     }
+
+    public void setEstado(String participantes){
+        this.estado = participantes;
+    }
 }

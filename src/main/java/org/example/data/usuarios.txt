@@ -2,3 +2,5 @@
 2,Pedro Pérez,pedro@gmail.com,5678,ESTUDIANTE
 3,Universidad Europea,uem@gmail.com,abcd,INSTITUCION
 4,Peter Parker,peter@gmail.com,5678,ESTUDIANTE
+5,Homero Herrera,homer@gmail.com,5678,ESTUDIANTE
+6,Santa Claus,santa@gmail.com,5678,ESTUDIANTE

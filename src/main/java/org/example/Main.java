@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.dtos.Competencia;
+import org.example.dtos.Duelo;
 import org.example.dtos.Inscripcion;
 import org.example.dtos.Usuario;
 
@@ -346,6 +347,217 @@ public class Main {
         System.out.println("No se encontró ninguna competencia con el ID: " + id);
     }
 
+
+    private static void detallarCompetenciaGestion(Integer id) {
+        cargarUsuariosDesdeArchivo();
+        for (Competencia competencia : competiciones) {
+            if (competencia.getId().equals(id)) {
+                System.out.println("========================================");
+                System.out.println("DETALLES DE LA COMPETENCIA");
+                System.out.println("========================================");
+                System.out.println("ID: " + competencia.getId());
+                System.out.println("Nombre: " + competencia.getNombre());
+                System.out.println("Descripción: " + competencia.getDescripcion());
+                System.out.println("Fecha de Inicio: " + new SimpleDateFormat("yyyy-MM-dd").format(competencia.getFechaInicio()));
+                System.out.println("Fecha de Fin: " + new SimpleDateFormat("yyyy-MM-dd").format(competencia.getFechaFin()));
+                System.out.println("Estado: " + competencia.getEstado());
+                System.out.println("ID de la Institución: " + usuarios.get(Integer.parseInt(competencia.getInstitucionId())-1).getNombre());
+                System.out.println("Costo de Inscripción: $" + competencia.getCostoInscripcion());
+                System.out.println("Máximo de Participantes: " + competencia.getMaxParticipantes());
+                System.out.println("Participantes Inscritos: " + competencia.getParticipantes());
+                System.out.println("========================================");
+
+
+
+
+
+                int opcion = 0;
+                while (true) {
+                    System.out.println("1. Sortear duelos");
+                    System.out.println("2. Enlistar Participantes");
+                    System.out.println("3. Ver duelos actuales");
+                    System.out.println("0. Salir");
+                    System.out.print("Ingrese su opcion o 0 para salir: ");
+                    String input = scanner.nextLine();
+                    try {
+                        opcion = Integer.parseInt(input);
+                        if(opcion == 0)
+                            return;
+                        if(opcion == 3) {
+                            listarDuelosPorCompetencia(String.valueOf(competencia.getId()));
+                        }else {
+                            if (opcion == 2) {
+                                enlistarInscritos(id);
+                            } else {
+                                if (opcion == 1) {
+                                    if (todosDuelosFinalizados(String.valueOf(competencia.getId()))) {
+                                        generarDuelos(String.valueOf(competencia.getId()));
+                                        competiciones.get(competencia.getId()).setEstado("EN PROCESO");
+                                        actualizarArchivoCompetencias(competiciones);
+                                    } else {
+                                        System.out.println("Aun hay duelos pendientes");
+                                    }
+                                } else {
+                                    System.out.println("La opcion es incorrecta.");
+                                }
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Ingrese un número entero válido.");
+                    }
+                }
+
+            }
+        }
+
+        System.out.println("No se encontró ninguna competencia con el ID: " + id);
+    }
+
+
+    private static void generarDuelos(String competenciaId) {
+        List<String> participantes = new ArrayList<>();
+
+        // Buscar usuarios inscritos en la competencia
+        for (Inscripcion inscripcion : inscripciones) {
+            if (inscripcion.getCompetenciaId().equals(competenciaId)) {
+                participantes.add(inscripcion.getUsuarioId());
+            }
+        }
+
+        // Mezclar la lista aleatoriamente para generar duelos al azar
+        Collections.shuffle(participantes);
+
+        List<Duelo> duelos = new ArrayList<>();
+
+        // Emparejar de 2 en 2
+        for (int i = 0; i < participantes.size(); i += 2) {
+            if (i + 1 < participantes.size()) {
+                // Duelo normal con 2 participantes
+                duelos.add(new Duelo(participantes.get(i), participantes.get(i + 1), competenciaId));
+            } else {
+                // Si queda un participante solo, crea un duelo donde gana automáticamente
+                Duelo dueloSolo = new Duelo(participantes.get(i), "0", competenciaId);
+                dueloSolo.setGanadorId(participantes.get(i)); // Gana automáticamente
+                duelos.add(dueloSolo);
+            }
+        }
+        guardarDuelosEnArchivo(duelos);
+    }
+
+
+    private static final String ARCHIVO_DUELOS = "src/main/java/org/example/data/duelos.txt";
+
+    private static void guardarDuelosEnArchivo(List<Duelo> duelos) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARCHIVO_DUELOS, true))) {
+            for (Duelo duelo : duelos) {
+                writer.write(String.format("%s,%s,%s,%s\n",
+                        duelo.getUsuario1Id(),
+                        duelo.getUsuario2Id(),
+                        duelo.getCompetenciaId(),
+                        duelo.getGanadorId()
+                ));
+            }
+            System.out.println("Duelos guardados correctamente en " + ARCHIVO_DUELOS);
+        } catch (IOException e) {
+            System.out.println("Error al guardar los duelos en el archivo: " + e.getMessage());
+        }
+    }
+
+
+
+    private static void listarDuelosPorCompetencia(String competenciaId) {
+        List<Duelo> duelos = new ArrayList<>();
+
+        // Leer el archivo de duelos y cargar la lista
+        try (BufferedReader reader = new BufferedReader(new FileReader(ARCHIVO_DUELOS))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] datos = linea.split(",");
+                if (datos.length == 4) {
+                    duelos.add(new Duelo(datos[0], datos[1], datos[2]));
+                    duelos.getLast().setGanadorId(datos[3]);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo de duelos: " + e.getMessage());
+            return;
+        }
+
+        // Filtrar los duelos que pertenecen a la competencia indicada
+        List<Duelo> duelosFiltrados = new ArrayList<>();
+        for (Duelo duelo : duelos) {
+            if (duelo.getCompetenciaId().equals(competenciaId)) {
+                duelosFiltrados.add(duelo);
+            }
+        }
+
+        // Si no hay duelos filtrados, informamos
+        if (duelosFiltrados.isEmpty()) {
+            System.out.println("No hay duelos registrados para la competencia ID: " + competenciaId);
+        } else {
+            System.out.println("Duelos para la competencia ID: " + competenciaId);
+
+            // Mostrar los duelos con los nombres de los usuarios
+            for (Duelo duelo : duelosFiltrados) {
+                String usuario1Nombre = obtenerNombreUsuario(duelo.getUsuario1Id());
+                String usuario2Nombre = obtenerNombreUsuario(duelo.getUsuario2Id());
+                String estado = duelo.getEstado();
+                String ganador = duelo.getGanadorId().equals("0") ? "N/A" : obtenerNombreUsuario(duelo.getGanadorId());
+
+                System.out.println(String.format("Usuario1: %s | Usuario2: %s | Estado: %s | Ganador: %s",
+                        usuario1Nombre, usuario2Nombre, estado, ganador));
+            }
+        }
+
+        scanner.nextLine();
+    }
+
+
+    private static boolean todosDuelosFinalizados(String competenciaId) {
+        List<Duelo> duelos = new ArrayList<>();
+
+        // Leer el archivo de duelos y cargar la lista
+        try (BufferedReader reader = new BufferedReader(new FileReader(ARCHIVO_DUELOS))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] datos = linea.split(",");
+                if (datos.length == 4) {
+                    duelos.add(new Duelo(datos[0], datos[1], datos[2]));
+                    duelos.getLast().setGanadorId(datos[3]);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo de duelos: " + e.getMessage());
+            return false;
+        }
+
+        // Filtrar los duelos que pertenecen a la competencia indicada
+        for (Duelo duelo : duelos) {
+            if (duelo.getCompetenciaId().equals(competenciaId)) {
+                // Si algún duelo tiene estado pendiente, devolver false
+                if (duelo.getGanadorId().equals("0")) {
+                    return false;
+                }
+            }
+        }
+
+        // Si todos los duelos están finalizados, devolver true
+        return true;
+    }
+
+
+
+
+    // Método para obtener el nombre del usuario por su ID
+    private static String obtenerNombreUsuario(String usuarioId) {
+        for (Usuario usuario : usuarios) {
+            if (usuario.getId().equals(usuarioId)) {
+                return usuario.getNombre();
+            }
+        }
+        return "Desconocido";  // Si no se encuentra el usuario, retornamos "Desconocido"
+    }
+
     private static boolean inscrito(Integer competenciaId) {
         boolean ins = false;
         for (Inscripcion inscripcion : inscripciones) {
@@ -502,6 +714,7 @@ public class Main {
 
 
     private static void verMisCompeticiones() {
+        cargarCompeticionesDesdeArchivo();
         System.out.println("\n--- Mis Competiciones ---");
         boolean tieneCompeticiones = false;
 
@@ -510,7 +723,7 @@ public class Main {
         int i = 0;
         for (Competencia c : competiciones) {
             if (c.getInstitucionId().equals(idActual)) {
-                identificadores.add(i);
+                identificadores.add(c.getId());
                 System.out.println(++i + " | Nombre: " + c.getNombre() + " | Estado: " + c.getEstado());
                 tieneCompeticiones = true;
             }
@@ -520,8 +733,24 @@ public class Main {
             return;
         }
 
-        System.out.println("Escriba competencia a gestionar o 0 para salir: ");
-
+        int opcion = 0;
+        while (true) {
+            System.out.print("Ingrese competición a detallar o 0 para salir: ");
+            String input = scanner.nextLine();
+            try {
+                opcion = Integer.parseInt(input);
+                if(opcion == 0)
+                    break;
+                if (opcion < identificadores.size() && opcion > 0) {
+                    detallarCompetenciaGestion(identificadores.get(opcion-1));
+                    break;
+                } else {
+                    System.out.println("La competicion debe existir.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Ingrese un número entero válido.");
+            }
+        }
 
 
     }
