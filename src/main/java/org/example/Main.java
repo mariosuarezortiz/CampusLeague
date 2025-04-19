@@ -390,12 +390,17 @@ public class Main {
                                 enlistarInscritos(id);
                             } else {
                                 if (opcion == 1) {
-                                    if (todosDuelosFinalizados(String.valueOf(competencia.getId()))) {
-                                        generarDuelos(String.valueOf(competencia.getId()));
-                                        competiciones.get(competencia.getId()).setEstado("EN PROCESO");
-                                        actualizarArchivoCompetencias(competiciones);
-                                    } else {
-                                        System.out.println("Aun hay duelos pendientes");
+                                    if(contarInscripcionesActivasPorCompetencia(String.valueOf(competencia.getId())) == 1) {
+                                        System.out.println("Ya hay un ganador: " + obtenerNombreUsuario(obtenerUltimoUsuarioActivo(String.valueOf(competencia.getId()))));
+                                    }else {
+
+                                        if (todosDuelosFinalizados(String.valueOf(competencia.getId()))) {
+                                            generarDuelos(String.valueOf(competencia.getId()));
+                                            competiciones.get(competencia.getId()).setEstado("EN PROCESO");
+                                            actualizarArchivoCompetencias(competiciones);
+                                        } else {
+                                            System.out.println("Aun hay duelos pendientes");
+                                        }
                                     }
                                 } else {
                                     System.out.println("La opcion es incorrecta.");
@@ -413,13 +418,45 @@ public class Main {
         System.out.println("No se encontró ninguna competencia con el ID: " + id);
     }
 
+    public static String obtenerUltimoUsuarioActivo(String competenciaId) {
+        String ultimoUsuarioId = null;
+        int contador = 0;
+
+        for (Inscripcion inscripcion : inscripciones) {
+            if (inscripcion.getCompetenciaId().equals(competenciaId)
+                    && inscripcion.getEstado().equalsIgnoreCase("ACTIVO")) {
+                ultimoUsuarioId = inscripcion.getUsuarioId();
+                contador++;
+            }
+        }
+
+        // Si hay exactamente un usuario activo, lo retornamos
+        if (contador == 1) {
+            return ultimoUsuarioId;
+        }
+
+        // Si hay más de uno o ninguno, retornamos null
+        return null;
+    }
+
+    public static int contarInscripcionesActivasPorCompetencia(String competenciaId) {
+        int contador = 0;
+        for (Inscripcion inscripcion : inscripciones) {
+            if (inscripcion.getCompetenciaId().equals(competenciaId)
+                    && inscripcion.getEstado().equalsIgnoreCase("ACTIVO")) {
+                contador++;
+            }
+        }
+        return contador;
+    }
+
 
     private static void generarDuelos(String competenciaId) {
         List<String> participantes = new ArrayList<>();
 
         // Buscar usuarios inscritos en la competencia
         for (Inscripcion inscripcion : inscripciones) {
-            if (inscripcion.getCompetenciaId().equals(competenciaId)) {
+            if (inscripcion.getCompetenciaId().equals(competenciaId) && inscripcion.getEstado().equals("ACTIVO")) {
                 participantes.add(inscripcion.getUsuarioId());
             }
         }
@@ -446,6 +483,77 @@ public class Main {
 
 
     private static final String ARCHIVO_DUELOS = "src/main/java/org/example/data/duelos.txt";
+
+
+    private static void actualizarGanadorDuelo(String dueloId) {
+        List<String> lineasActualizadas = new ArrayList<>();
+        boolean actualizado = false;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(ARCHIVO_DUELOS))) {
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] datos = linea.split(",");
+
+                if (datos.length == 4 && datos[2].equals(dueloId) && datos[3].equals("0")) {
+
+                    System.out.println("Duelo encontrado entre: " + usuarios.get(Integer.parseInt(datos[0])-1).getNombre() + " y " + usuarios.get(Integer.parseInt(datos[1])-1).getNombre());
+
+
+
+                    String opcion;
+                    while (true) {
+                        System.out.print("¿Quién ganó el duelo? (1 para usuario1, 2 para usuario2): ");
+                        opcion = scanner.nextLine().trim();
+
+                        if (opcion.equals("1")) {
+                            datos[3] = datos[0]; // usuario1
+                            for (Inscripcion inscripcion : inscripciones) {
+                                if(inscripcion.getUsuarioId().equals(datos[1]) && inscripcion.getCompetenciaId().equals(datos[2])) {
+                                    inscripcion.setEstado("DESCALIFICADO");
+                                }
+                            }
+                            break;
+                        } else if (opcion.equals("2")) {
+                            datos[3] = datos[1]; // usuario2
+                            for (Inscripcion inscripcion : inscripciones) {
+                                if(inscripcion.getUsuarioId().equals(datos[0]) && inscripcion.getCompetenciaId().equals(datos[2])) {
+                                    inscripcion.setEstado("DESCALIFICADO");
+                                }
+                            }
+                            break;
+                        } else {
+                            System.out.println("Opción no válida. Intente de nuevo.");
+                        }
+                    }
+
+
+                    linea = String.join(",", datos);
+                    actualizado = true;
+                }
+                guardarInscripciones();
+                lineasActualizadas.add(linea);
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+            return;
+        }
+
+        // Sobrescribir el archivo si se encontró y actualizó el duelo
+        if (actualizado) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARCHIVO_DUELOS))) {
+                for (String l : lineasActualizadas) {
+                    writer.write(l);
+                    writer.newLine();
+                }
+                System.out.println("Duelo actualizado correctamente.");
+            } catch (IOException e) {
+                System.out.println("Error al escribir el archivo: " + e.getMessage());
+            }
+        } else {
+            System.out.println("No se encontró un duelo con ese ID.");
+        }
+    }
+
 
     private static void guardarDuelosEnArchivo(List<Duelo> duelos) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARCHIVO_DUELOS, true))) {
@@ -504,12 +612,19 @@ public class Main {
                 String estado = duelo.getEstado();
                 String ganador = duelo.getGanadorId().equals("0") ? "N/A" : obtenerNombreUsuario(duelo.getGanadorId());
 
-                System.out.println(String.format("Usuario1: %s | Usuario2: %s | Estado: %s | Ganador: %s",
-                        usuario1Nombre, usuario2Nombre, estado, ganador));
+                if(!Objects.equals(ganador, "0")) {
+                    System.out.println(String.format("Usuario1: %s | Usuario2: %s | Estado: %s | Ganador: %s",
+                            usuario1Nombre, usuario2Nombre, estado, ganador));
+                }
+            }
+
+            System.out.print("Ingrese 1 si quiere editar los duelos o 0 si quiere salir: ");
+            String dueloId = scanner.nextLine();
+            if (Objects.equals(dueloId, "1")) {
+                actualizarGanadorDuelo(competenciaId);
             }
         }
 
-        scanner.nextLine();
     }
 
 
@@ -589,6 +704,25 @@ public class Main {
         }
         return inscripciones;
     }
+
+    public static void guardarInscripciones() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARCHIVO_INSCRIPCIONES))) {
+            for (Inscripcion inscripcion : inscripciones) {
+                String linea = String.join(",",
+                        inscripcion.getId(),
+                        inscripcion.getUsuarioId(),
+                        inscripcion.getCompetenciaId(),
+                        inscripcion.getEstado()
+                );
+                writer.write(linea);
+                writer.newLine();
+            }
+            System.out.println("Archivo de inscripciones actualizado correctamente.");
+        } catch (IOException e) {
+            System.out.println("Error al guardar las inscripciones: " + e.getMessage());
+        }
+    }
+
 
     public static void agregarInscripcion(Inscripcion inscripcion) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(ARCHIVO_INSCRIPCIONES, true))) {
