@@ -364,8 +364,8 @@ public class Main {
 
         List<Inscripcion> misInscripciones = new ArrayList<>();
 
-        for(Inscripcion inscripcion: inscripciones) {
-            if(inscripcion.getUsuarioId().equals(idActual))
+        for (Inscripcion inscripcion : inscripciones) {
+            if (inscripcion.getUsuarioId().equals(idActual))
                 misInscripciones.add(inscripcion);
         }
 
@@ -373,19 +373,30 @@ public class Main {
             System.out.println("No hay competiciones disponibles.");
             return;
         }
+
         System.out.println("\n--- Lista de Competiciones ---");
         int i = 1;
+
         for (Competencia c : competiciones) {
-            for (Inscripcion inscripcion: misInscripciones){
-                if(String.valueOf(c.getId()).equals(inscripcion.getCompetenciaId()))
-                    System.out.println(i++ + ". Nombre: " + c.getNombre() + " | Estado de Competencia: " + c.getEstado() + " | Fecha Inicio: " +
-                            new SimpleDateFormat("yyyy-MM-dd").format( c.getFechaInicio()) +
-                            " | Mi estado: " + inscripcion.getEstado());
+            for (Inscripcion miInscripcion : misInscripciones) {
+                if (String.valueOf(c.getId()).equals(miInscripcion.getCompetenciaId())) {
+                    String estadoMiInscripcion = miInscripcion.getEstado();
 
+                    // Verificar si es el único activo en esa competencia
+                    if (estadoMiInscripcion.equalsIgnoreCase("ACTIVO")) {
+                        int activos = contarInscripcionesActivasPorCompetencia(miInscripcion.getCompetenciaId());
+                        if (activos == 1 && c.getEstado().equals("FINALIZADA")) {
+                            estadoMiInscripcion = "GANADOR 🏆";
+                        }
+                    }
+
+                    System.out.println(i++ + ". Nombre: " + c.getNombre() +
+                            " | Estado de Competencia: " + c.getEstado() +
+                            " | Fecha Inicio: " + new SimpleDateFormat("yyyy-MM-dd").format(c.getFechaInicio()) +
+                            " | Mi estado: " + estadoMiInscripcion);
+                }
             }
-
         }
-
 
         scanner.nextLine();
     }
