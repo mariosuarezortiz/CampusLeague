@@ -82,6 +82,7 @@ public class Main {
             System.out.println("\n--- MENÚ ESTDUIANTES ---");
             System.out.println("1. Enlistar Competiciones");
             System.out.println("2. Competiciones Inscritas");
+            System.out.println("3. Mis metricas");
             System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
 
@@ -96,6 +97,11 @@ public class Main {
                     limpiarConsola();
                     enlistarCompeticionesInscritasEstudiante();
                     break;
+                case "3":
+                    limpiarConsola();
+                    mostrarKPIsEstudiante();
+                    break;
+
                 case "0":
                     limpiarConsola();
                     System.out.println("Saliendo del menú...");
@@ -400,6 +406,72 @@ public class Main {
 
         scanner.nextLine();
     }
+
+    private static void mostrarKPIsEstudiante() {
+        cargarCompeticionesDesdeArchivo();
+
+        int totalInscripciones = 0;
+        int totalGanadas = 0;
+        double totalGastado = 0.0;
+
+        // Mapa para contar participaciones por mes y año (ej: "2024-04" -> 3)
+        Map<String, Integer> participacionesPorMes = new TreeMap<>();
+
+        for (Inscripcion inscripcion : inscripciones) {
+            if (inscripcion.getUsuarioId().equals(idActual)) {
+                totalInscripciones++;
+
+                for (Competencia competencia : competiciones) {
+                    if (String.valueOf(competencia.getId()).equals(inscripcion.getCompetenciaId())) {
+
+                        // Sumar gasto si no está descalificado
+                        if (!inscripcion.getEstado().equalsIgnoreCase("DESCALIFICADO")) {
+                            totalGastado += competencia.getCostoInscripcion();
+                        }
+
+                        // GANADOR si es único activo y competencia finalizada
+                        if (inscripcion.getEstado().equalsIgnoreCase("ACTIVO")
+                                && competencia.getEstado().equalsIgnoreCase("FINALIZADA")) {
+
+                            int activos = contarInscripcionesActivasPorCompetencia(inscripcion.getCompetenciaId());
+                            if (activos == 1) {
+                                totalGanadas++;
+                            }
+                        }
+
+                        // Agrupar por mes y año
+                        SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM");
+                        String clave = formato.format(competencia.getFechaInicio());
+
+                        participacionesPorMes.put(clave, participacionesPorMes.getOrDefault(clave, 0) + 1);
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        System.out.println("\n📈 --- MIS INDICADORES CLAVE (KPI) --- 📈");
+        System.out.println("🧾 Total de inscripciones realizadas: " + totalInscripciones);
+        System.out.printf("💰 Total gastado en inscripciones: S/ %.2f%n", totalGastado);
+        System.out.println("🏆 Veces que fuiste GANADOR (único ACTIVO y competencia FINALIZADA): " + totalGanadas);
+
+        // Mostrar por mes y año
+        System.out.println("🗓️ Participaciones por mes y año:");
+        for (Map.Entry<String, Integer> entry : participacionesPorMes.entrySet()) {
+            System.out.println("   - " + entry.getKey() + ": " + entry.getValue());
+        }
+
+        if (totalInscripciones > 0) {
+            double porcentajeVictorias = (double) totalGanadas / totalInscripciones * 100;
+            System.out.printf("✅ Porcentaje de victorias: %.2f%%\n", porcentajeVictorias);
+        } else {
+            System.out.println("✅ Porcentaje de victorias: 0.00%");
+        }
+
+        scanner.nextLine(); // Pausa
+    }
+
 
 
     private static void detallarCompetencia(Integer id) {
