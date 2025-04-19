@@ -30,4 +30,7 @@ public class Usuario {
     public String getId() {
         return id;
     }
+    public String getRol() {
+        return rol;
+    }
 }

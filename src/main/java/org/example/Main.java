@@ -40,7 +40,14 @@ public class Main {
                     limpiarConsola();
                     menuEstudiante();
                 } else {
-                    System.out.println("Acceso concedido, pero sin rol identificado.");
+                    if(tipoUsuario.equals("ADMINISTRADOR")){
+                        institucionActual = correoIngresado;
+                        limpiarConsola();
+                        menuAdmin();
+                    }
+                    else {
+                        System.out.println("Acceso concedido, pero sin rol identificado.");
+                    }
                 }
             }
         } else {
@@ -75,6 +82,148 @@ public class Main {
 
         return null;
     }
+
+    private static void menuAdmin() {
+        while (true) {
+            limpiarConsola();
+            System.out.println("\n--- MENÚ ESTDUIANTES ---");
+            System.out.println("1. Ver contenido interesante");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione una opción: ");
+
+            String opcion = scanner.nextLine();
+
+            switch (opcion) {
+                case "1":
+                    limpiarConsola();
+                    mostrarKPIsAdministrador();
+                    break;
+
+                case "0":
+                    limpiarConsola();
+                    System.out.println("Saliendo del menú...");
+                    return;
+                default:
+                    limpiarConsola();
+                    System.out.println("Opción inválida. Intente nuevamente.");
+            }
+        }
+    }
+
+
+    private static void mostrarKPIsAdministrador() {
+        cargarCompeticionesDesdeArchivo();
+        cargarUsuariosDesdeArchivo();
+
+        double ingresosTotales = 0.0;
+        double costosTotales = 0.0;
+
+        int totalUsuarios = usuarios.size();
+        int totalEstudiantes = 0;
+        int totalInstituciones = 0;
+        int totalAdmins = 0;
+
+        int totalCompetencias = competiciones.size();
+        int competenciasCanceladas = 0;
+        int competenciasFinalizadas = 0;
+
+        Set<String> usuariosEstudiantesActivos = new HashSet<>();
+        Set<String> institucionesActivas = new HashSet<>();
+
+        Map<Integer, Integer> competenciasPorAnio = new TreeMap<>();
+
+        // Clasificar usuarios por rol
+        for (Usuario user : usuarios) {
+            switch (user.getRol().toUpperCase()) {
+                case "ESTUDIANTE" -> totalEstudiantes++;
+                case "INSTITUCION" -> totalInstituciones++;
+                case "ADMINISTRADOR" -> totalAdmins++;
+            }
+        }
+
+        // Recolectar estadísticas de inscripciones (TODOS cuentan como participación)
+        for (Inscripcion inscripcion : inscripciones) {
+            for (Competencia competencia : competiciones) {
+                if (String.valueOf(competencia.getId()).equals(inscripcion.getCompetenciaId())) {
+                    ingresosTotales += competencia.getCostoInscripcion();
+                    usuariosEstudiantesActivos.add(inscripcion.getUsuarioId());
+                    break;
+                }
+            }
+        }
+
+
+        // Procesar competencias
+        for (Competencia competencia : competiciones) {
+            if (competencia.getEstado().equalsIgnoreCase("CANCELADA")) {
+                competenciasCanceladas++;
+            }
+            if (competencia.getEstado().equalsIgnoreCase("FINALIZADA")) {
+                competenciasFinalizadas++;
+            }
+
+            // Costo estimado por organización
+            costosTotales += 20.0;
+
+            // Marcar instituciones activas
+            institucionesActivas.add(competencia.getInstitucionId());
+
+            // Agrupar por año
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(competencia.getFechaInicio());
+            int anio = cal.get(Calendar.YEAR);
+            competenciasPorAnio.put(anio, competenciasPorAnio.getOrDefault(anio, 0) + 1);
+        }
+
+        // Resultados
+        System.out.println("\n📊 --- INDICADORES CLAVE DE LA PLATAFORMA (KPI) --- 📊");
+        System.out.println("👥 Total de usuarios: " + totalUsuarios);
+        System.out.println("   📚 Estudiantes: " + totalEstudiantes);
+        System.out.println("   🏫 Instituciones: " + totalInstituciones);
+        System.out.println("   👑 Administradores: " + totalAdmins);
+
+        System.out.println("\n🧍‍♂️ Estudiantes activos (participaron): " + usuariosEstudiantesActivos.size());
+        System.out.printf("📈 %% de estudiantes que usan la app: %.2f%%%n",
+                totalEstudiantes == 0 ? 0 : (usuariosEstudiantesActivos.size() * 100.0 / totalEstudiantes));
+
+        System.out.println("\n🏛️ Instituciones activas (organizaron algo): " + institucionesActivas.size());
+        System.out.printf("📈 %% de instituciones activas: %.2f%%%n",
+                totalInstituciones == 0 ? 0 : (institucionesActivas.size() * 100.0 / totalInstituciones));
+
+        System.out.println("\n🏆 Total de competencias creadas: " + totalCompetencias);
+        System.out.println("✅ Finalizadas: " + competenciasFinalizadas);
+        System.out.println("❌ Canceladas: " + competenciasCanceladas);
+        System.out.printf("📉 %% canceladas: %.2f%%\n",
+                totalCompetencias == 0 ? 0 : (competenciasCanceladas * 100.0 / totalCompetencias));
+        System.out.printf("📊 %% finalizadas: %.2f%%\n",
+                totalCompetencias == 0 ? 0 : (competenciasFinalizadas * 100.0 / totalCompetencias));
+
+        System.out.println("\n💰 Ingresos por inscripciones: S/ " + String.format("%.2f", ingresosTotales));
+        System.out.println("💸 Costos totales estimados: S/ " + String.format("%.2f", costosTotales));
+        System.out.println("📈 Ganancia neta: S/ " + String.format("%.2f", ingresosTotales - costosTotales));
+
+        System.out.println("\n📅 Competencias por año:");
+        int anioAnterior = -1;
+        int cantidadAnterior = 0;
+        for (Map.Entry<Integer, Integer> entry : competenciasPorAnio.entrySet()) {
+            int anio = entry.getKey();
+            int cantidad = entry.getValue();
+            double crecimiento = anioAnterior == -1 ? 0 : ((cantidad - cantidadAnterior) / (double) cantidadAnterior) * 100;
+            System.out.printf("   - %d: %d competencias", anio, cantidad);
+            if (anioAnterior != -1) {
+                System.out.printf(" | Crecimiento: %.2f%%", crecimiento);
+            }
+            System.out.println();
+            anioAnterior = anio;
+            cantidadAnterior = cantidad;
+        }
+
+        scanner.nextLine(); // Pausa
+    }
+
+
+
+
 
     private static void menuEstudiante() {
         while (true) {
