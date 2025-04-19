@@ -114,7 +114,8 @@ public class Main {
             System.out.println("1. Enlistar Competiciones");
             System.out.println("2. Agregar Competición");
             System.out.println("3. Mis Competiciones");
-            System.out.println("4. Salir");
+            System.out.println("4. Mis Metricas");
+            System.out.println("5. Salir");
             System.out.print("Seleccione una opción: ");
 
             String opcion = scanner.nextLine();
@@ -134,6 +135,10 @@ public class Main {
                     break;
                 case "4":
                     limpiarConsola();
+                    verResumenKPIInstitucion();
+                    break;
+                case "5":
+                    limpiarConsola();
                     System.out.println("Saliendo del menú...");
                     return;
                 default:
@@ -141,6 +146,109 @@ public class Main {
             }
         }
     }
+
+
+    private static void verResumenKPIInstitucion() {
+        cargarCompeticionesDesdeArchivo();
+        cargarInscripciones();
+
+        int totalCompeticiones = 0;
+        int totalInscritos = 0;
+        int totalActivos = 0;
+        int totalMaxParticipantes = 0;
+        double totalIngresosBrutos = 0;
+        double totalCostos = 0;
+        double totalGanancias = 0;
+
+        for (Competencia competencia : competiciones) {
+            if (competencia.getInstitucionId().equals(idActual)) {
+                totalCompeticiones++;
+
+                String competenciaId = String.valueOf(competencia.getId());
+                int inscritos = competencia.getParticipantes();
+                int activos = contarInscripcionesActivasPorCompetencia(competenciaId);
+                int maxParticipantes = competencia.getMaxParticipantes();
+                double costoInscripcion = competencia.getCostoInscripcion();
+
+                double ingresos = inscritos * costoInscripcion;
+                double costoEvento = calcularCostoEvento(competencia); // Usa el método de antes
+                double ganancia = ingresos - costoEvento;
+
+                totalInscritos += inscritos;
+                totalActivos += activos;
+                totalMaxParticipantes += maxParticipantes;
+                totalIngresosBrutos += ingresos;
+                totalCostos += costoEvento;
+                totalGanancias += ganancia;
+            }
+        }
+
+        if (totalCompeticiones == 0) {
+            System.out.println("No tienes competiciones registradas.");
+            return;
+        }
+
+        double porcentajeOcupacionPromedio = (totalInscritos * 100.0) / totalMaxParticipantes;
+
+        System.out.println("\n===== KPI GLOBAL DE LA INSTITUCIÓN =====");
+        System.out.println("Total de competiciones organizadas: " + totalCompeticiones);
+        System.out.println("Total de inscritos: " + totalInscritos);
+        System.out.println("Total de participantes activos: " + totalActivos);
+        System.out.println("Máximo total permitido de participantes: " + totalMaxParticipantes);
+        System.out.printf("Porcentaje promedio de ocupación: %.2f%%\n", porcentajeOcupacionPromedio);
+        System.out.printf("Ingresos brutos totales: S/ %.2f\n", totalIngresosBrutos);
+        System.out.printf("Costos estimados totales: S/ %.2f\n", totalCostos);
+        System.out.printf("Ganancia neta total: S/ %.2f\n", totalGanancias);
+        System.out.println("===========================================");
+
+        scanner.nextLine();
+    }
+
+
+    public static void mostrarKPICompetencia(Competencia competencia) {
+        String competenciaId = String.valueOf(competencia.getId());
+        int inscritos = competencia.getParticipantes();
+        int maxParticipantes = competencia.getMaxParticipantes();
+        int activos = contarInscripcionesActivasPorCompetencia(competenciaId);
+        double costoInscripcion = competencia.getCostoInscripcion();
+
+        double ingresosBrutos = inscritos * costoInscripcion;
+        double costoEvento = calcularCostoEvento(competencia); // Puedes ajustar esta fórmula como desees
+        double gananciaNeta = ingresosBrutos - costoEvento;
+        double porcentajeOcupacion = (inscritos * 100.0) / maxParticipantes;
+
+        System.out.println("=== Indicadores Clave de Desempeño (KPI) ===");
+        System.out.println("Nombre de la competencia: " + competencia.getNombre());
+        System.out.println("Estado: " + competencia.getEstado());
+        System.out.println("Máx. participantes permitidos: " + maxParticipantes);
+        System.out.println("Participantes inscritos: " + inscritos);
+        System.out.println("Participantes activos: " + activos);
+        System.out.printf("Porcentaje de participación: %.2f%%\n", porcentajeOcupacion);
+        System.out.printf("Costo por inscripción: S/ %.2f\n", costoInscripcion);
+        System.out.printf("Ingresos brutos: S/ %.2f\n", ingresosBrutos);
+        System.out.printf("Costo estimado del evento: S/ %.2f\n", costoEvento);
+        System.out.printf("Ganancia neta: S/ %.2f\n", gananciaNeta);
+
+        if (competencia.getEstado().equalsIgnoreCase("FINALIZADA")) {
+            String ganadorId = obtenerUltimoUsuarioActivo(competenciaId);
+            if (ganadorId != null) {
+                String nombreGanador = obtenerNombreUsuario(ganadorId); // Asumiendo que tienes esta función
+                System.out.println("Ganador: " + nombreGanador + " (ID: " + ganadorId + ")");
+            } else {
+                System.out.println("No se pudo determinar un único ganador.");
+            }
+        }
+
+        System.out.println("=============================================");
+
+    }
+
+    public static double calcularCostoEvento(Competencia competencia) {
+        // Supón que por cada participante el costo operativo es S/ 5.00
+        double costoPorParticipante = 5.0;
+        return competencia.getParticipantes() * costoPorParticipante;
+    }
+
 
     private static void cargarCompeticionesDesdeArchivo() {
         competiciones.clear(); // Limpiar la lista antes de cargar nuevas competiciones
@@ -319,6 +427,7 @@ public class Main {
                             enlistarInscritos(id);
                             return;
                         }
+
                         else {
                             if (opcion == 1) {
                                 if (Objects.equals(competencia.getMaxParticipantes(), competencia.getParticipantes())) {
@@ -376,6 +485,7 @@ public class Main {
                     System.out.println("1. Sortear duelos");
                     System.out.println("2. Enlistar Participantes");
                     System.out.println("3. Ver duelos actuales");
+                    System.out.println("4. Ver metricas de la competencia");
                     System.out.println("0. Salir");
                     System.out.print("Ingrese su opcion o 0 para salir: ");
                     String input = scanner.nextLine();
@@ -389,21 +499,25 @@ public class Main {
                             if (opcion == 2) {
                                 enlistarInscritos(id);
                             } else {
-                                if (opcion == 1) {
-                                    if(contarInscripcionesActivasPorCompetencia(String.valueOf(competencia.getId())) == 1) {
-                                        System.out.println("Ya hay un ganador: " + obtenerNombreUsuario(obtenerUltimoUsuarioActivo(String.valueOf(competencia.getId()))));
-                                    }else {
-
-                                        if (todosDuelosFinalizados(String.valueOf(competencia.getId()))) {
-                                            generarDuelos(String.valueOf(competencia.getId()));
-                                            competiciones.get(competencia.getId()).setEstado("EN PROCESO");
-                                            actualizarArchivoCompetencias(competiciones);
-                                        } else {
-                                            System.out.println("Aun hay duelos pendientes");
-                                        }
-                                    }
+                                if (opcion == 4) {
+                                    mostrarKPICompetencia(competencia);
                                 } else {
-                                    System.out.println("La opcion es incorrecta.");
+                                    if (opcion == 1) {
+                                        if (contarInscripcionesActivasPorCompetencia(String.valueOf(competencia.getId())) == 1) {
+                                            System.out.println("Ya hay un ganador: " + obtenerNombreUsuario(obtenerUltimoUsuarioActivo(String.valueOf(competencia.getId()))));
+                                        } else {
+
+                                            if (todosDuelosFinalizados(String.valueOf(competencia.getId()))) {
+                                                generarDuelos(String.valueOf(competencia.getId()));
+                                                competiciones.get(competencia.getId()).setEstado("EN PROCESO");
+                                                actualizarArchivoCompetencias(competiciones);
+                                            } else {
+                                                System.out.println("Aun hay duelos pendientes");
+                                            }
+                                        }
+                                    } else {
+                                        System.out.println("La opcion es incorrecta.");
+                                    }
                                 }
                             }
                         }
