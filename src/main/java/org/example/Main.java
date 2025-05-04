@@ -8,6 +8,7 @@ import org.example.dtos.Usuario;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
@@ -18,44 +19,116 @@ public class Main {
     private static String idActual;
 
     public static void main(String[] args) {
-        System.out.println("===== BIENVENIDO AL SISTEMA =====");
+        while (true) {
+            System.out.println("===== BIENVENIDO AL SISTEMA =====");
+            System.out.println("1. Iniciar sesión");
+            System.out.println("2. Registrarse");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione una opción: ");
+            String opcion = scanner.nextLine();
+
+            switch (opcion) {
+                case "1":
+                    iniciarSesion();
+                    break;
+                case "2":
+                    registrarUsuario();
+                    break;
+                case "0":
+                    System.out.println("Gracias por usar el sistema. ¡Hasta luego!");
+                    scanner.close();
+                    return;
+                default:
+                    System.out.println("Opción incorrecta. Intente nuevamente.\n");
+            }
+        }
+    }
+
+    private static void registrarUsuario() {
+        System.out.println("===== REGISTRO DE ESTUDIANTE =====");
+        System.out.print("Ingrese nombre completo: ");
+        String nombre = scanner.nextLine();
+        System.out.print("Ingrese correo: ");
+        String correo = scanner.nextLine();
+        System.out.print("Ingrese contraseña: ");
+        String contraseña = scanner.nextLine();
+
+        File archivo = new File("src/main/java/org/example/data/usuarios.txt");
+
+        int maxId = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] datos = linea.split(",");
+                if (datos.length >= 1) {
+                    try {
+                        int id = Integer.parseInt(datos[0].trim());
+                        if (id > maxId) {
+                            maxId = id;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                // Validar que el correo no esté repetido
+                if (datos.length >= 3 && datos[2].trim().equalsIgnoreCase(correo)) {
+                    System.out.println("Error: El correo ya está registrado.");
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+            return;
+        }
+
+        int nuevoId = maxId + 1;
+        String nuevoUsuario = nuevoId + "," + nombre + "," + correo + "," + contraseña + ",ESTUDIANTE";
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(archivo, true))) {
+            bw.write(nuevoUsuario);
+            bw.newLine();
+            System.out.println("Estudiante registrado exitosamente con ID: " + nuevoId);
+        } catch (IOException e) {
+            System.out.println("Error al registrar el estudiante: " + e.getMessage());
+        }
+    }
+
+
+
+    private static void iniciarSesion() {
         System.out.print("Ingrese su correo: ");
         String correoIngresado = scanner.nextLine();
         System.out.print("Ingrese su contraseña: ");
         String contraseñaIngresada = scanner.nextLine();
 
-        String tipoUsuario = validarUsuario(correoIngresado, contraseñaIngresada);
         cargarUsuariosDesdeArchivo();
         cargarInscripciones();
+        String tipoUsuario = validarUsuario(correoIngresado, contraseñaIngresada);
+
         if (tipoUsuario != null) {
             System.out.println("Inicio de sesión exitoso. ¡Bienvenido!");
 
-            if (tipoUsuario.equals("INSTITUCION")) {
-                institucionActual = correoIngresado;
-                limpiarConsola();
-                menuInstitucion();
-            } else {
-                if (tipoUsuario.equals("ESTUDIANTE")) {
-                    institucionActual = correoIngresado;
-                    limpiarConsola();
+            institucionActual = correoIngresado;
+            limpiarConsola();
+
+            switch (tipoUsuario) {
+                case "INSTITUCION":
+                    menuInstitucion();
+                    break;
+                case "ESTUDIANTE":
                     menuEstudiante();
-                } else {
-                    if(tipoUsuario.equals("ADMINISTRADOR")){
-                        institucionActual = correoIngresado;
-                        limpiarConsola();
-                        menuAdmin();
-                    }
-                    else {
-                        System.out.println("Acceso concedido, pero sin rol identificado.");
-                    }
-                }
+                    break;
+                case "ADMINISTRADOR":
+                    menuAdmin();
+                    break;
+                default:
+                    System.out.println("Su cuenta no existe o ha sido deshabilitada.");
             }
         } else {
             System.out.println("Error: Correo o contraseña incorrectos.");
         }
-
-        scanner.close();
     }
+
+
 
     public static String validarUsuario(String correo, String contraseña) {
         File archivo = new File("src/main/java/org/example/data/usuarios.txt");
@@ -86,8 +159,10 @@ public class Main {
     private static void menuAdmin() {
         while (true) {
             limpiarConsola();
-            System.out.println("\n--- MENÚ ESTDUIANTES ---");
+            System.out.println("\n--- MENÚ ADMINISTRADOR ---");
             System.out.println("1. Ver contenido interesante");
+            System.out.println("2. Agregar nuevo usuario");
+            System.out.println("3. Listar Usuarios ");
             System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
 
@@ -97,6 +172,14 @@ public class Main {
                 case "1":
                     limpiarConsola();
                     mostrarKPIsAdministrador();
+                    break;
+                case "2":
+                    limpiarConsola();
+                    agregarNuevoUsuarioComoAdmin();
+                    break;
+                case "3":
+                    limpiarConsola();
+                    deshabilitarUsuariosPorID();
                     break;
 
                 case "0":
@@ -109,6 +192,127 @@ public class Main {
             }
         }
     }
+
+    private static void deshabilitarUsuariosPorID() {
+        File archivo = new File("src/main/java/org/example/data/usuarios.txt");
+        List<String[]> usuariosDatos = new ArrayList<>();
+
+        System.out.println("===== LISTA DE USUARIOS =====");
+
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] datos = linea.split(",");
+                if (datos.length >= 5) {
+                    usuariosDatos.add(datos);
+                    System.out.println("ID: " + datos[0] + " | Nombre: " + datos[1] + " | Rol: " + datos[4]);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer usuarios: " + e.getMessage());
+            return;
+        }
+
+        System.out.print("\nIngrese los ID de los usuarios a deshabilitar separados por comas: ");
+        String entrada = scanner.nextLine();
+        String[] idsSeleccionados = entrada.split(",");
+
+        Set<String> idsADeshabilitar = Arrays.stream(idsSeleccionados)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        List<String> nuevasLineas = new ArrayList<>();
+
+        for (String[] datos : usuariosDatos) {
+            String id = datos[0];
+            String nombre = datos[1];
+            String correo = datos[2];
+            String contrasena = datos[3];
+            String rol = datos[4];
+
+            // Verifica si el ID está en la lista y no es ADMINISTRADOR
+            if (idsADeshabilitar.contains(id) && !rol.equalsIgnoreCase("ADMINISTRADOR")) {
+                rol = "INHABILITADO";
+                System.out.println("✔ Usuario " + nombre + " ha sido deshabilitado.");
+            }
+
+            nuevasLineas.add(id + "," + nombre + "," + correo + "," + contrasena + "," + rol);
+        }
+
+        // Guardar cambios
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(archivo))) {
+            for (String linea : nuevasLineas) {
+                bw.write(linea);
+                bw.newLine();
+            }
+            System.out.println("\n✅ Cambios guardados correctamente.");
+        } catch (IOException e) {
+            System.out.println("Error al escribir en el archivo: " + e.getMessage());
+        }
+
+        scanner.nextLine(); // Pausa
+    }
+
+
+    private static void agregarNuevoUsuarioComoAdmin() {
+        System.out.println("===== CREAR NUEVO USUARIO =====");
+        System.out.print("Ingrese nombre completo: ");
+        String nombre = scanner.nextLine();
+        System.out.print("Ingrese correo: ");
+        String correo = scanner.nextLine();
+        System.out.print("Ingrese contraseña: ");
+        String contraseña = scanner.nextLine();
+
+        System.out.print("Ingrese rol (ESTUDIANTE / ADMINISTRADOR / INSTITUCION): ");
+        String rol = scanner.nextLine().toUpperCase();
+
+        // Validar rol
+        if (!rol.equals("ESTUDIANTE") && !rol.equals("ADMINISTRADOR") && !rol.equals("INSTITUCION")) {
+            System.out.println("Error: Rol inválido. Solo se permiten ESTUDIANTE, ADMINISTRADOR o INSTITUCION.");
+            return;
+        }
+
+        File archivo = new File("src/main/java/org/example/data/usuarios.txt");
+
+        int maxId = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                String[] datos = linea.split(",");
+                if (datos.length >= 1) {
+                    try {
+                        int id = Integer.parseInt(datos[0].trim());
+                        if (id > maxId) {
+                            maxId = id;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                // Validar correo único
+                if (datos.length >= 3 && datos[2].trim().equalsIgnoreCase(correo)) {
+                    System.out.println("Error: El correo ya está registrado.");
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+            return;
+        }
+
+        int nuevoId = maxId + 1;
+        String nuevoUsuario = nuevoId + "," + nombre + "," + correo + "," + contraseña + "," + rol;
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(archivo, true))) {
+            bw.write(nuevoUsuario);
+            bw.newLine();
+            System.out.println("✅ Usuario registrado exitosamente con ID: " + nuevoId);
+        } catch (IOException e) {
+            System.out.println("Error al registrar el usuario: " + e.getMessage());
+        }
+
+        scanner.nextLine(); // Pausa
+    }
+
 
 
     private static void mostrarKPIsAdministrador() {
