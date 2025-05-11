@@ -1,6 +1,3 @@
-1,Torneo de Clash Royale,COmpetencia para alumnos de 1 y 2 añi,2024-03-25,2024-03-20,3,12.00,4,FINALIZADA,4
-2,torneo de call of duty,un torneo de cod bo6,2025-03-04,2025-03-06,3,10.00,8,EN PROCESO,1
-3,torneo de futbol,un torneo de ...',2025-04-04,2025-04-08,3,10.00,9,DISPONIBLE,1
-4,torneo de basketball,un torneo de basketball para los estudiantes de la facultad,2025-05-07,2025-05-08,3,3.00,10,DISPONIBLE,0
-5,Nueva,ES PRUEBITAAAA,2024-03-12,2024-03-30,3,23.00,5,DISPONIBLE,0
-6,nuevito,asdads,2026-06-12,2025-12-12,3,12.00,5,DISPONIBLE,0
+1,Torneo de Clash Royale,Competencia 1vs1 para alumnos de 1° y 2° año,2024-03-25,2024-03-26,9,12.00,4,FINALIZADA,4
+2,Torneo de Call of Duty 1vs1,Duelo individual en mapas reducidos de COD BO6,2025-03-04,2025-03-06,3,10.00,4,DISPONIBLE,3
+3,Torneo de Ajedrez,Rondas eliminatorias 1vs1 entre estudiantes,2025-04-10,2025-04-12,3,8.00,4,DISPONIBLE,3

@@ -706,7 +706,7 @@ public class Main {
                 opcion = Integer.parseInt(input);
                 if(opcion == 0)
                     break;
-                if (opcion < competiciones.size() && opcion > 0) {
+                if (opcion <= competiciones.size() && opcion > 0) {
                     detallarCompetencia(opcion);
                     break;
                 } else {
@@ -940,12 +940,15 @@ public class Main {
                                 } else {
                                     if (opcion == 1) {
                                         if (contarInscripcionesActivasPorCompetencia(String.valueOf(competencia.getId())) == 1) {
+                                            competiciones.get(competencia.getId()-1).setEstado("FINALIZADA");
+                                            actualizarArchivoCompetencias(competiciones);
+
                                             System.out.println("Ya hay un ganador: " + obtenerNombreUsuario(obtenerUltimoUsuarioActivo(String.valueOf(competencia.getId()))));
                                         } else {
 
                                             if (todosDuelosFinalizados(String.valueOf(competencia.getId()))) {
                                                 generarDuelos(String.valueOf(competencia.getId()));
-                                                competiciones.get(competencia.getId()).setEstado("EN PROCESO");
+                                                competiciones.get(competencia.getId()-1).setEstado("EN PROCESO");
                                                 actualizarArchivoCompetencias(competiciones);
                                             } else {
                                                 System.out.println("Aun hay duelos pendientes");
@@ -1115,7 +1118,7 @@ public class Main {
                         duelo.getGanadorId()
                 ));
             }
-            System.out.println("Duelos guardados correctamente en " + ARCHIVO_DUELOS);
+           // System.out.println("Duelos guardados correctamente en " + ARCHIVO_DUELOS);
         } catch (IOException e) {
             System.out.println("Error al guardar los duelos en el archivo: " + e.getMessage());
         }
@@ -1241,6 +1244,7 @@ public class Main {
 
     // Método para cargar inscripciones desde el archivo
     public static List<Inscripcion> cargarInscripciones() {
+        inscripciones.clear();
         try (BufferedReader br = new BufferedReader(new FileReader(ARCHIVO_INSCRIPCIONES))) {
             String linea;
             while ((linea = br.readLine()) != null) {
@@ -1425,7 +1429,7 @@ public class Main {
                 opcion = Integer.parseInt(input);
                 if(opcion == 0)
                     break;
-                if (opcion < identificadores.size() && opcion > 0) {
+                if (opcion <= identificadores.size() && opcion > 0) {
                     detallarCompetenciaGestion(identificadores.get(opcion-1));
                     break;
                 } else {

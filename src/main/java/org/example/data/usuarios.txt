@@ -1,9 +1,10 @@
-1,Ana Gomez,ana@gmail.com,1234,ADMINISTRADOR
-2,Pedro Pérez,pedro@gmail.com,5678,ESTUDIANTE
-3,Universidad Europea,uem@gmail.com,abcd,INSTITUCION
-4,Peter Parker,peter@gmail.com,5678,ESTUDIANTE
-5,Homero Herrera,homer@gmail.com,5678,ESTUDIANTE
-6,Santa Claus,santa@gmail.com,5678,INHABILITADO
-7,Gonzalo Gonzalez,gon@uem.es,1234,ESTUDIANTE
-8,Lulu,lulu@uem.es,123,INHABILITADO
-9,Universidad Peruana de Ciencias Aplicadas,upc@gmail.com,123,INSTITUCION
+1,Ana Gómez,ana.gomez@example.com,123,ADMINISTRADOR
+2,Pedro Pérez,pedro.perez@example.com,123,ESTUDIANTE
+3,Universidad Europea de Madrid,uem@example.com,123,INSTITUCION
+4,Camila Torres,camila.torres@example.com,123,ESTUDIANTE
+5,Andrés Herrera,andres.herrera@example.com,123,ESTUDIANTE
+6,Laura Martínez,laura.martinez@example.com,123,ESTUDIANTE
+7,Gonzalo González,gonzalo.gonzalez@example.com,123,ESTUDIANTE
+8,Lucía Fernández,lucia.fernandez@example.com,123,ESTUDIANTE
+9,Universidad Peruana de Ciencias Aplicadas,upc@example.com,123,INSTITUCION
+10,Jaime Ríos,jaime.rios@example.com,123,ESTUDIANTE
