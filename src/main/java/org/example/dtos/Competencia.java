@@ -76,7 +76,6 @@ public class Competencia {
         return maxParticipantes;
     }
 
-
     public Integer getParticipantes(){
         return participantes;
     }

@@ -432,7 +432,7 @@ public class Main {
     private static void menuEstudiante() {
         while (true) {
             limpiarConsola();
-            System.out.println("\n--- MENÚ ESTDUIANTES ---");
+            System.out.println("\n--- MENÚ ESTUDIANTES ---");
             System.out.println("1. Enlistar Competiciones");
             System.out.println("2. Competiciones Inscritas");
             System.out.println("3. Mis metricas");
@@ -1358,8 +1358,15 @@ public class Main {
             Date fechaInicio = formatoFecha.parse(fechaInicioStr);
             Date fechaFin = formatoFecha.parse(fechaFinStr);
 
+            String instiId = "0";
+            for(Usuario usuario: usuarios) {
+                if(usuario.getCorreo().equals(institucionActual)) {
+                    instiId = usuario.getId();
+                }
+            }
+
             Competencia nuevaCompetencia = new Competencia(
-                    competiciones.size()+1, nombre, descripcion, fechaInicio, fechaFin, institucionActual, costoInscripcion, numeroParticipantes,"DISPONIBLE", 0);
+                    competiciones.size()+1, nombre, descripcion, fechaInicio, fechaFin, instiId, costoInscripcion, numeroParticipantes,"DISPONIBLE", 0);
             competiciones.add(nuevaCompetencia);
 
             guardarCompetenciaEnArchivo(nuevaCompetencia);
