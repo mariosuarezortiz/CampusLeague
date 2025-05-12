@@ -1312,8 +1312,17 @@ public class Main {
         System.out.print("Ingrese la descripción: ");
         String descripcion = scanner.nextLine();
         System.out.print("Ingrese el costo de inscripción: ");
-        double costoInscripcion = scanner.nextDouble();
-        scanner.nextLine();
+        double costoInscripcion = 0.0;
+        while (true) {
+            if (scanner.hasNextDouble()) {
+            costoInscripcion = scanner.nextDouble();
+            scanner.nextLine(); // Limpia el buffer
+            break; // Sal del bucle si es válido
+            } else {
+                System.out.println("Entrada inválida. Por favor, ingrese un número válido.");
+                scanner.nextLine(); // Limpia la entrada incorrecta
+            }
+        }
 
         int numeroParticipantes = 0;
         while (true) {
