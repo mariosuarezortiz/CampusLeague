@@ -19,6 +19,7 @@ public class Main {
     private static String idActual;
 
     public static void main(String[] args) {
+        verificarYAgregarUsuarioPorDefecto();
         while (true) {
             System.out.println("===== BIENVENIDO AL SISTEMA =====");
             System.out.println("1. Iniciar sesión");
@@ -93,6 +94,30 @@ public class Main {
     }
 
 
+    private static void verificarYAgregarUsuarioPorDefecto() {
+        File archivo = new File("src/main/java/org/example/data/usuarios.txt");
+
+        try {
+            // Crear archivo si no existe
+            if (!archivo.exists()) {
+                archivo.getParentFile().mkdirs(); // Crear directorios si no existen
+                archivo.createNewFile();
+            }
+
+            // Verificar si está vacío
+            if (archivo.length() == 0) {
+                try (FileWriter writer = new FileWriter(archivo)) {
+                    writer.write("1,Ana Gómez,ana.gomez@example.com,123,ADMINISTRADOR\n");
+                    System.out.println("✅ Admin por defecto agregado.");
+                }
+            }
+
+        } catch (IOException e) {
+            System.err.println("❌ Error al verificar o escribir el archivo: " + e.getMessage());
+        }
+    }
+
+
 
     private static void iniciarSesion() {
         System.out.print("Ingrese su correo: ");
@@ -105,19 +130,21 @@ public class Main {
         String tipoUsuario = validarUsuario(correoIngresado, contraseñaIngresada);
 
         if (tipoUsuario != null) {
-            System.out.println("Inicio de sesión exitoso. ¡Bienvenido!");
 
             institucionActual = correoIngresado;
             limpiarConsola();
 
             switch (tipoUsuario) {
                 case "INSTITUCION":
+                    System.out.println("Inicio de sesión exitoso. ¡Bienvenido!");
                     menuInstitucion();
                     break;
                 case "ESTUDIANTE":
+                    System.out.println("Inicio de sesión exitoso. ¡Bienvenido!");
                     menuEstudiante();
                     break;
                 case "ADMINISTRADOR":
+                    System.out.println("Inicio de sesión exitoso. ¡Bienvenido!");
                     menuAdmin();
                     break;
                 default:
