@@ -33,4 +33,7 @@ public class Usuario {
     public String getRol() {
         return rol;
     }
+    public String getCorreo() {
+        return correo;
+    }
 }
