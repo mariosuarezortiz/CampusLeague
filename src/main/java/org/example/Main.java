@@ -163,6 +163,7 @@ public class Main {
             System.out.println("1. Ver contenido interesante");
             System.out.println("2. Agregar nuevo usuario");
             System.out.println("3. Listar Usuarios ");
+            System.out.println("4. Exportar metricas de admin ");
             System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
 
@@ -180,6 +181,10 @@ public class Main {
                 case "3":
                     limpiarConsola();
                     deshabilitarUsuariosPorID();
+                    break;
+                case "4":
+                    limpiarConsola();
+                    guardarKPIsAdministradorEnCSV("Usuario_" + idActual);
                     break;
 
                 case "0":
@@ -314,6 +319,116 @@ public class Main {
     }
 
 
+    private static void guardarKPIsAdministradorEnCSV(String nombreArchivo) {
+        cargarCompeticionesDesdeArchivo();
+        cargarUsuariosDesdeArchivo();
+
+        double ingresosTotales = 0.0;
+        double costosTotales = 0.0;
+
+        int totalUsuarios = usuarios.size();
+        int totalEstudiantes = 0;
+        int totalInstituciones = 0;
+        int totalAdmins = 0;
+
+        int totalCompetencias = competiciones.size();
+        int competenciasCanceladas = 0;
+        int competenciasFinalizadas = 0;
+
+        Set<String> usuariosEstudiantesActivos = new HashSet<>();
+        Set<String> institucionesActivas = new HashSet<>();
+
+        Map<Integer, Integer> competenciasPorAnio = new TreeMap<>();
+
+        for (Usuario user : usuarios) {
+            switch (user.getRol().toUpperCase()) {
+                case "ESTUDIANTE" -> totalEstudiantes++;
+                case "INSTITUCION" -> totalInstituciones++;
+                case "ADMINISTRADOR" -> totalAdmins++;
+            }
+        }
+
+        for (Inscripcion inscripcion : inscripciones) {
+            for (Competencia competencia : competiciones) {
+                if (String.valueOf(competencia.getId()).equals(inscripcion.getCompetenciaId())) {
+                    ingresosTotales += competencia.getCostoInscripcion();
+                    usuariosEstudiantesActivos.add(inscripcion.getUsuarioId());
+                    break;
+                }
+            }
+        }
+
+        for (Competencia competencia : competiciones) {
+            if (competencia.getEstado().equalsIgnoreCase("CANCELADA")) {
+                competenciasCanceladas++;
+            }
+            if (competencia.getEstado().equalsIgnoreCase("FINALIZADA")) {
+                competenciasFinalizadas++;
+            }
+            costosTotales += 20.0;
+            institucionesActivas.add(competencia.getInstitucionId());
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(competencia.getFechaInicio());
+            int anio = cal.get(Calendar.YEAR);
+            competenciasPorAnio.put(anio, competenciasPorAnio.getOrDefault(anio, 0) + 1);
+        }
+
+        String nombreCSV = "métricas_" + nombreArchivo + ".csv";
+
+        try (FileWriter writer = new FileWriter("src/main/java/org/example/data/exported/"+nombreCSV)) {
+            writer.append("Métrica,Valor\n");
+            writer.append("Total Usuarios,").append(String.valueOf(totalUsuarios)).append("\n");
+            writer.append("Estudiantes,").append(String.valueOf(totalEstudiantes)).append("\n");
+            writer.append("Instituciones,").append(String.valueOf(totalInstituciones)).append("\n");
+            writer.append("Administradores,").append(String.valueOf(totalAdmins)).append("\n");
+
+            writer.append("Estudiantes Activos,").append(String.valueOf(usuariosEstudiantesActivos.size())).append("\n");
+            writer.append("% Estudiantes Activos,")
+                    .append(String.format("%.2f", totalEstudiantes == 0 ? 0 : (usuariosEstudiantesActivos.size() * 100.0 / totalEstudiantes)))
+                    .append("\n");
+
+            writer.append("Instituciones Activas,").append(String.valueOf(institucionesActivas.size())).append("\n");
+            writer.append("% Instituciones Activas,")
+                    .append(String.format("%.2f", totalInstituciones == 0 ? 0 : (institucionesActivas.size() * 100.0 / totalInstituciones)))
+                    .append("\n");
+
+            writer.append("Total Competencias,").append(String.valueOf(totalCompetencias)).append("\n");
+            writer.append("Finalizadas,").append(String.valueOf(competenciasFinalizadas)).append("\n");
+            writer.append("Canceladas,").append(String.valueOf(competenciasCanceladas)).append("\n");
+            writer.append("% Canceladas,")
+                    .append(String.format("%.2f", totalCompetencias == 0 ? 0 : (competenciasCanceladas * 100.0 / totalCompetencias)))
+                    .append("\n");
+            writer.append("% Finalizadas,")
+                    .append(String.format("%.2f", totalCompetencias == 0 ? 0 : (competenciasFinalizadas * 100.0 / totalCompetencias)))
+                    .append("\n");
+
+            writer.append("Ingresos Totales,S/ ").append(String.format("%.2f", ingresosTotales)).append("\n");
+            writer.append("Costos Totales,S/ ").append(String.format("%.2f", costosTotales)).append("\n");
+            writer.append("Ganancia Neta,S/ ").append(String.format("%.2f", ingresosTotales - costosTotales)).append("\n");
+
+            writer.append("Competencias por Año:\n");
+            int anioAnterior = -1;
+            int cantidadAnterior = 0;
+            for (Map.Entry<Integer, Integer> entry : competenciasPorAnio.entrySet()) {
+                int anio = entry.getKey();
+                int cantidad = entry.getValue();
+                double crecimiento = anioAnterior == -1 ? 0 : ((cantidad - cantidadAnterior) / (double) cantidadAnterior) * 100;
+                writer.append(anio + "," + cantidad);
+                writer.append("\n");
+                if (anioAnterior != -1) {
+                    writer.append("Crecimiento:,").append(String.format("%.2f", crecimiento)).append("%");
+                }
+                anioAnterior = anio;
+                cantidadAnterior = cantidad;
+            }
+
+            System.out.println("✅ Métricas guardadas correctamente en: " + nombreCSV);
+        } catch (IOException e) {
+            System.err.println("❌ Error al guardar el archivo CSV: " + e.getMessage());
+        }
+    }
+
 
     private static void mostrarKPIsAdministrador() {
         cargarCompeticionesDesdeArchivo();
@@ -436,6 +551,7 @@ public class Main {
             System.out.println("1. Enlistar Competiciones");
             System.out.println("2. Competiciones Inscritas");
             System.out.println("3. Mis metricas");
+            System.out.println("4. Exportar mis metricas");
             System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
 
@@ -454,7 +570,10 @@ public class Main {
                     limpiarConsola();
                     mostrarKPIsEstudiante();
                     break;
-
+                case "4":
+                    limpiarConsola();
+                    exportarKPIsEstudianteACSV("Usuario_"+idActual);
+                    break;
                 case "0":
                     limpiarConsola();
                     System.out.println("Saliendo del menú...");
@@ -474,7 +593,8 @@ public class Main {
             System.out.println("2. Agregar Competición");
             System.out.println("3. Mis Competiciones");
             System.out.println("4. Mis Metricas");
-            System.out.println("5. Salir");
+            System.out.println("5. Exportar Metricas");
+            System.out.println("0. Salir");
             System.out.print("Seleccione una opción: ");
 
             String opcion = scanner.nextLine();
@@ -498,6 +618,10 @@ public class Main {
                     break;
                 case "5":
                     limpiarConsola();
+                    exportarResumenKPIInstitucionACSV("Usuario_"+idActual);
+                    break;
+                case "0":
+                    limpiarConsola();
                     System.out.println("Saliendo del menú...");
                     return;
                 default:
@@ -505,6 +629,68 @@ public class Main {
             }
         }
     }
+
+    private static void exportarResumenKPIInstitucionACSV(String nombreArchivo) {
+        cargarCompeticionesDesdeArchivo();
+        cargarInscripciones();
+
+        int totalCompeticiones = 0;
+        int totalInscritos = 0;
+        int totalActivos = 0;
+        int totalMaxParticipantes = 0;
+        double totalIngresosBrutos = 0;
+        double totalCostos = 0;
+        double totalGanancias = 0;
+
+        for (Competencia competencia : competiciones) {
+            if (competencia.getInstitucionId().equals(idActual)) {
+                totalCompeticiones++;
+
+                String competenciaId = String.valueOf(competencia.getId());
+                int inscritos = competencia.getParticipantes();
+                int activos = contarInscripcionesActivasPorCompetencia(competenciaId);
+                int maxParticipantes = competencia.getMaxParticipantes();
+                double costoInscripcion = competencia.getCostoInscripcion();
+
+                double ingresos = inscritos * costoInscripcion;
+                double costoEvento = calcularCostoEvento(competencia);
+                double ganancia = ingresos - costoEvento;
+
+                totalInscritos += inscritos;
+                totalActivos += activos;
+                totalMaxParticipantes += maxParticipantes;
+                totalIngresosBrutos += ingresos;
+                totalCostos += costoEvento;
+                totalGanancias += ganancia;
+            }
+        }
+
+        if (totalCompeticiones == 0) {
+            System.out.println("No tienes competiciones registradas.");
+            return;
+        }
+
+        double porcentajeOcupacionPromedio = (totalInscritos * 100.0) / totalMaxParticipantes;
+
+        String nombreCSV = "métricas_" + nombreArchivo + ".csv";
+
+        try (PrintWriter writer = new PrintWriter(new File("src/main/java/org/example/data/exported/"+nombreCSV))) {
+            writer.println("Métrica,Valor");
+            writer.println("Total competiciones," + totalCompeticiones);
+            writer.println("Total inscritos," + totalInscritos);
+            writer.println("Total participantes activos," + totalActivos);
+            writer.println("Máximo total de participantes," + totalMaxParticipantes);
+            writer.printf("Porcentaje promedio de ocupación,%.2f%%%n", porcentajeOcupacionPromedio);
+            writer.printf("Ingresos brutos totales,S/ %.2f%n", totalIngresosBrutos);
+            writer.printf("Costos estimados totales,S/ %.2f%n", totalCostos);
+            writer.printf("Ganancia neta total,S/ %.2f%n", totalGanancias);
+
+            System.out.println("✅ Métricas exportadas exitosamente a '" + nombreCSV + "'");
+        } catch (IOException e) {
+            System.err.println("❌ Error al escribir el archivo CSV: " + e.getMessage());
+        }
+    }
+
 
 
     private static void verResumenKPIInstitucion() {
@@ -759,6 +945,73 @@ public class Main {
 
         scanner.nextLine();
     }
+
+    private static void exportarKPIsEstudianteACSV(String nombreArchivo) {
+        cargarCompeticionesDesdeArchivo();
+
+        int totalInscripciones = 0;
+        int totalGanadas = 0;
+        double totalGastado = 0.0;
+        Map<String, Integer> participacionesPorMes = new TreeMap<>();
+
+        for (Inscripcion inscripcion : inscripciones) {
+            if (inscripcion.getUsuarioId().equals(idActual)) {
+                totalInscripciones++;
+
+                for (Competencia competencia : competiciones) {
+                    if (String.valueOf(competencia.getId()).equals(inscripcion.getCompetenciaId())) {
+
+                        if (!inscripcion.getEstado().equalsIgnoreCase("DESCALIFICADO")) {
+                            totalGastado += competencia.getCostoInscripcion();
+                        }
+
+                        if (inscripcion.getEstado().equalsIgnoreCase("ACTIVO") &&
+                                competencia.getEstado().equalsIgnoreCase("FINALIZADA")) {
+
+                            int activos = contarInscripcionesActivasPorCompetencia(inscripcion.getCompetenciaId());
+                            if (activos == 1) {
+                                totalGanadas++;
+                            }
+                        }
+
+                        SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM");
+                        String clave = formato.format(competencia.getFechaInicio());
+
+                        participacionesPorMes.put(clave, participacionesPorMes.getOrDefault(clave, 0) + 1);
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        String nombreCSV = "kpis_estudiante_" + nombreArchivo + ".csv";
+
+        try (PrintWriter writer = new PrintWriter( new File("src/main/java/org/example/data/exported/"+nombreCSV))) {
+            writer.println("KPI,Valor");
+            writer.println("Total de inscripciones," + totalInscripciones);
+            writer.printf("Total gastado en inscripciones,S/ %.2f%n", totalGastado);
+            writer.println("Total de victorias," + totalGanadas);
+
+            if (totalInscripciones > 0) {
+                double porcentajeVictorias = (double) totalGanadas / totalInscripciones * 100;
+                writer.printf("Porcentaje de victorias,%.2f%%%n", porcentajeVictorias);
+            } else {
+                writer.println("Porcentaje de victorias,0.00%");
+            }
+
+            writer.println(); // línea vacía
+            writer.println("Mes-Año,Participaciones");
+            for (Map.Entry<String, Integer> entry : participacionesPorMes.entrySet()) {
+                writer.println(entry.getKey() + "," + entry.getValue());
+            }
+
+            System.out.println("✅ KPIs exportados exitosamente a '" + nombreCSV + "'");
+        } catch (IOException e) {
+            System.err.println("❌ Error al escribir el archivo CSV: " + e.getMessage());
+        }
+    }
+
 
     private static void mostrarKPIsEstudiante() {
         cargarCompeticionesDesdeArchivo();
