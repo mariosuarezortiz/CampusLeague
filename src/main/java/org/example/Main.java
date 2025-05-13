@@ -6,6 +6,7 @@ import org.example.dtos.Inscripcion;
 import org.example.dtos.Usuario;
 
 import java.io.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -1621,22 +1622,55 @@ public class Main {
         }
 
 
-        System.out.print("Ingrese la fecha de inicio (YYYY-MM-DD): ");
-        String fechaInicioStr = scanner.nextLine();
-        try {
-            Date fechaInicio = formatoFecha.parse(fechaInicioStr);
-        } catch (Exception e) {
-            System.out.println("El formato de la fecha esta mal puesta porfavor intente denuevo");
-            return;
+        Scanner scanner = new Scanner(System.in);
+        SimpleDateFormat formatoFecha = new SimpleDateFormat("yyyy-MM-dd");
+        formatoFecha.setLenient(false); // valida fechas como 2024-02-30 como incorrectas
+
+        Date fechaInicio = null;
+        Date fechaFin = null;
+        Date hoy = new Date();
+
+        // Calcular fecha mínima de inicio (hoy + 7 días)
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(hoy);
+        cal.add(Calendar.DAY_OF_MONTH, 7);
+        Date fechaMinimaInicio = cal.getTime();
+
+        // Validar fecha de inicio
+        while (true) {
+            System.out.print("Ingrese la fecha de inicio (YYYY-MM-DD): ");
+            String fechaInicioStr = scanner.nextLine();
+            try {
+                fechaInicio = formatoFecha.parse(fechaInicioStr);
+                if (fechaInicio.before(fechaMinimaInicio)) {
+                    System.out.println("La fecha de inicio debe ser al menos una semana después de hoy.");
+                    continue;
+                }
+                break;
+            } catch (ParseException e) {
+                System.out.println("El formato de la fecha está mal. Por favor, intente de nuevo.");
+            }
         }
-        System.out.print("Ingrese la fecha de fin (YYYY-MM-DD): ");
 
-        String fechaFinStr = scanner.nextLine();
+        // Validar fecha de fin
+        while (true) {
+            System.out.print("Ingrese la fecha de fin (YYYY-MM-DD): ");
+            String fechaFinStr = scanner.nextLine();
+            try {
+                fechaFin = formatoFecha.parse(fechaFinStr);
+                if (fechaFin.before(fechaInicio)) {
+                    System.out.println("La fecha de fin debe ser igual o posterior a la fecha de inicio.");
+                    continue;
+                }
+                break;
+            } catch (ParseException e) {
+                System.out.println("El formato de la fecha está mal. Por favor, intente de nuevo.");
+            }
+        }
 
 
         try {
-            Date fechaInicio = formatoFecha.parse(fechaInicioStr);
-            Date fechaFin = formatoFecha.parse(fechaFinStr);
+
 
             String instiId = "0";
             for(Usuario usuario: usuarios) {
