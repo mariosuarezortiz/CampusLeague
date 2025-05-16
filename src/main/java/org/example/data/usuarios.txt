@@ -1,0 +1,10 @@
+1,Ana Gómez,ana.gomez@example.com,123,ADMINISTRADOR
+2,Pedro Pérez,pedro.perez@example.com,123,ESTUDIANTE
+3,Universidad Europea de Madrid,uem@example.com,123,INSTITUCION
+4,Camila Torres,camila.torres@example.com,123,ESTUDIANTE
+5,Andrés Herrera,andres.herrera@example.com,123,ESTUDIANTE
+6,Laura Martínez,laura.martinez@example.com,123,ESTUDIANTE
+7,Gonzalo González,gonzalo.gonzalez@example.com,123,ESTUDIANTE
+8,Lucía Fernández,lucia.fernandez@example.com,123,ESTUDIANTE
+9,Universidad Peruana de Ciencias Aplicadas,upc@example.com,123,INSTITUCION
+10,Jaime Ríos,jaime.rios@example.com,123,ESTUDIANTE
